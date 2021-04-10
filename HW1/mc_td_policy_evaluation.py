@@ -13,10 +13,10 @@ env = gym.make("Blackjack-v0")
 def mc_policy_evaluation(policy, env, num_episodes, gamma=1.0):
     """
         Find the value function for a given policy using first-visit Monte-Carlo sampling
-        
+
         Input Arguments
         ----------
-            policy: 
+            policy:
                 a function that maps a state to action probabilities
             env:
                 an OpenAI gym environment
@@ -25,28 +25,51 @@ def mc_policy_evaluation(policy, env, num_episodes, gamma=1.0):
             gamma: float
                 the discount factor
         ----------
-        
+
         Output
         ----------
             V: dict (that maps from state -> value)
         ----------
-    
+
         TODOs
         ----------
             1. Initialize the value function
             2. Sample an episode and calculate sample returns
             3. Iterate and update the value function
         ----------
-        
+
     """
-    
+
     # value function
     V = defaultdict(float)
-    
+
     ##### FINISH TODOS HERE #####
+    N = defaultdict(float)
 
+    for ep in range(num_episodes):
+        trajectory = []
+        state = env.reset()
+        action = policy(state)
+        done = False
+        while not done:
+            action = policy(state)
+            next_state, reward, done, _ = env.step(action)
+            trajectory.append((state, action, reward))
+            state = next_state
 
-    
+        sample_returns = []
+        running_reward = 0
+        for s, a, r in reversed(trajectory):
+            running_reward = r + gamma * running_reward
+            sample_returns.append(running_reward)
+        sample_returns.reverse()
+
+        first_visit = set()
+        for i, (s, a, r) in enumerate(trajectory):
+            if s not in first_visit:
+                N[s] += 1
+                V[s] = V[s] + (sample_returns[i] - V[s]) / N[s]
+                first_visit.add(s)
 
     #############################
 
@@ -56,10 +79,10 @@ def mc_policy_evaluation(policy, env, num_episodes, gamma=1.0):
 def td0_policy_evaluation(policy, env, num_episodes, gamma=1.0):
     """
         Find the value function for the given policy using TD(0)
-    
+
         Input Arguments
         ----------
-            policy: 
+            policy:
                 a function that maps a state to action probabilities
             env:
                 an OpenAI gym environment
@@ -68,12 +91,12 @@ def td0_policy_evaluation(policy, env, num_episodes, gamma=1.0):
             gamma: float
                 the discount factor
         ----------
-    
+
         Output
         ----------
             V: dict (that maps from state -> value)
         ----------
-        
+
         TODOs
         ----------
             1. Initialize the value function
@@ -85,15 +108,26 @@ def td0_policy_evaluation(policy, env, num_episodes, gamma=1.0):
     V = defaultdict(float)
 
     ##### FINISH TODOS HERE #####
+    N = defaultdict(float)
 
-
-    
+    for ep in range(num_episodes):
+        state = env.reset()
+        done = False
+        while not done:
+            action = policy(state)
+            next_state, reward, done, _ = env.step(action)
+            N[state] += 1
+            if done:
+                V[state] = V[state] + (reward - V[state]) / N[state]
+            else:
+                V[state] = V[state] + (reward + gamma * V[next_state] - V[state]) / N[state]
+            state = next_state
 
     #############################
 
     return V
 
-    
+
 
 def plot_value_function(V, title="Value Function"):
     """
@@ -128,8 +162,8 @@ def plot_value_function(V, title="Value Function"):
 
     plot_surface(X, Y, Z_noace, "{} (No Usable Ace)".format(title))
     plot_surface(X, Y, Z_ace, "{} (Usable Ace)".format(title))
-    
-    
+
+
 def apply_policy(observation):
     """
         A policy under which one will stick if the sum of cards is >= 20 and hit otherwise.
@@ -149,7 +183,7 @@ if __name__ == '__main__':
     plot_value_function(V_td0_10k, title="10,000 Steps")
     V_td0_500k = td0_policy_evaluation(apply_policy, env, num_episodes=500000)
     plot_value_function(V_td0_500k, title="500,000 Steps")
-    
+
 
 
 
