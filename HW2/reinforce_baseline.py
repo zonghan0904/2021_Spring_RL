@@ -118,7 +118,7 @@ class Policy(nn.Module):
 
         gamma_t = 1
         for (log_prob, state_value), sample_return in zip(saved_actions, returns):
-            policy_loss = -gamma_t * (sample_return - state_value) * log_prob
+            policy_loss = -gamma_t * (sample_return - state_value.detach()) * log_prob
             policy_losses.append(policy_loss)
             gamma_t *= gamma
             value_loss = F.smooth_l1_loss(state_value, torch.tensor([sample_return]))
@@ -224,10 +224,10 @@ def test(name, n_episodes=10):
 if __name__ == '__main__':
     # For reproducibility, fix the random seed
     random_seed = 20
-    lr = 0.01
+    lr = 0.001
     env = gym.make('CartPole-v0')
     env.seed(random_seed)
     torch.manual_seed(random_seed)
     train(lr)
-    test('CartPole_0.01.pth')
+    test('CartPole_0.001.pth')
 
