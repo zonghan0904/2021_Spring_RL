@@ -237,10 +237,10 @@ def test(name, n_episodes=10):
 if __name__ == '__main__':
     # For reproducibility, fix the random seed
     random_seed = 20
-    lr = 0.00025
+    lr = 0.0005
     env = gym.make('LunarLander-v2')
     env.seed(random_seed)
     torch.manual_seed(random_seed)
     train(lr)
-    test('LunarLander_0.00025.pth')
+    test('LunarLander_0.0005.pth')
 
